@@ -1,0 +1,77 @@
+[tool.poetry]
+name = "personiverse"
+version = "0.1.0"
+description = "AI人格世界平台 - 社会模拟与性格探测"
+authors = ["PersonaVerse Team"]
+readme = "README.md"
+packages = [
+    { include = "apps/core" },
+    { include = "packages/*" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+# Web框架
+fastapi = "^0.109"
+uvicorn = {extras = ["standard"], version = "^0.27"}
+python-socketio = "^5.11"
+
+# 数据验证与序列化
+pydantic = "^2.5"
+pydantic-settings = "^2.1"
+
+# 数据库
+sqlalchemy = {extras = ["asyncpg"], version = "^2.0"}
+alembic = "^1.13"
+asyncpg = "^0.29"
+
+# 缓存与消息
+redis = "^5.0"
+celery = "^5.3"
+
+# 服务通信
+grpcio = "^1.60"
+protobuf = "^4.25"
+
+# 日志与监控
+structlog = "^24.1"
+python-json-logger = "^2.0"
+
+# HTTP客户端
+httpx = "^0.26"
+aiohttp = "^3.9"
+
+# 图计算（社交关系网络）
+networkx = "^3.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pytest-asyncio = "^0.23"
+pytest-cov = "^4.1"
+black = "^24.0"
+ruff = "^0.2"
+mypy = "^1.8"
+pre-commit = "^3.6"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 100
+target-version = ['py311']
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
