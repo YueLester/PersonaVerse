@@ -167,6 +167,8 @@ class WorldEngine:
     
     async def _request_decision(self, agent_id: str, scenario: Scenario) -> None:
         """向 Agent 请求决策"""
+        from ..config import settings
+        
         agent = await registry.get(agent_id)
         if not agent:
             return
@@ -175,11 +177,23 @@ class WorldEngine:
         await registry.update_status(agent_id, AgentStatus.DECIDING)
         
         try:
-            # 创建连接器
-            connector = ConnectorFactory.create(
-                agent.connector_type,
-                agent.connector_config
-            )
+            # 确定使用哪种连接器
+            if settings.AGENT_SERVICE_ENABLED:
+                # 优先使用 Agent 服务
+                connector = ConnectorFactory.create(
+                    "agent_service",
+                    {
+                        "base_url": settings.AGENT_SERVICE_URL,
+                        "api_key": settings.AGENT_SERVICE_API_KEY
+                    }
+                )
+                print(f"[World] 使用 Agent 服务: {settings.AGENT_SERVICE_URL}")
+            else:
+                # 使用 Agent 自身的连接器配置
+                connector = ConnectorFactory.create(
+                    agent.connector_type,
+                    agent.connector_config
+                )
             
             # 构建决策请求
             node = scenario.current_node

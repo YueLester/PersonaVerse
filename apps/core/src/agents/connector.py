@@ -176,6 +176,124 @@ class OpenAIConnector(AgentConnector):
         return True
 
 
+class AgentServiceConnector(AgentConnector):
+    """
+    Agent 服务连接器
+    
+    通过 HTTP 调用独立的 Agent 服务（可以是本地 AI 服务或其他决策服务）
+    """
+    
+    def __init__(self, base_url: str = "http://localhost:8001", api_key: Optional[str] = None):
+        if not HAS_HTTPX:
+            raise ImportError("httpx is required. Install: pip install httpx")
+        
+        self.base_url = base_url.rstrip("/")
+        self.api_key = api_key
+        self.client = httpx.AsyncClient(
+            base_url=self.base_url,
+            headers={"Authorization": f"Bearer {api_key}"} if api_key else {},
+            timeout=60.0
+        )
+    
+    async def get_decision(self, agent: Agent, request: DecisionRequest) -> Decision:
+        """调用 Agent 服务获取决策"""
+        import json
+        start_time = asyncio.get_event_loop().time()
+        
+        # 构建消息
+        system_prompt = """你是一个在虚拟世界中生存的角色。请根据情境做出最真实的选择。
+你的选择应该反映你的性格、价值观和生存策略。
+请只返回选项的 ID，不要解释。"""
+        
+        # 构建选项描述
+        choices_desc = "\n".join([
+            f"- {c['id']}: {c.get('description', '')}"
+            for c in request.choices
+        ])
+        
+        user_prompt = f"""# 情境
+{request.context.get('description', '做出你的选择：')}
+
+# 可选项
+{choices_desc}
+
+请选择一个选项（只返回 ID）："""
+        
+        try:
+            response = await self.client.post(
+                "/generate",
+                json={
+                    "tenant_id": agent.id,
+                    "agent_type": agent.connector_type,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    "config": {
+                        "temperature": 0.8,
+                        "max_tokens": 50,
+                        "timeout": request.timeout
+                    }
+                }
+            )
+            
+            result = response.json()
+            content = result.get("content", "").strip()
+            
+            # 解析选择 ID
+            choice_id = self._parse_choice(content, request.choices)
+            
+            response_time = asyncio.get_event_loop().time() - start_time
+            
+            return Decision(
+                agent_id=agent.id,
+                choice_id=choice_id,
+                reasoning=content if len(content) > len(choice_id) + 5 else None,
+                response_time=response_time
+            )
+            
+        except Exception as e:
+            response_time = asyncio.get_event_loop().time() - start_time
+            # 失败时返回第一个选项
+            return Decision(
+                agent_id=agent.id,
+                choice_id=request.choices[0]["id"] if request.choices else "default",
+                reasoning=f"Error: {str(e)}",
+                response_time=response_time
+            )
+    
+    def _parse_choice(self, content: str, choices: list[dict]) -> str:
+        """解析选择"""
+        valid_ids = {c["id"] for c in choices}
+        
+        # 直接匹配
+        if content in valid_ids:
+            return content
+        
+        # 在文本中查找
+        for choice_id in valid_ids:
+            if choice_id in content:
+                return choice_id
+        
+        # 默认第一个
+        return choices[0]["id"] if choices else "default"
+    
+    async def send_perception(self, agent: Agent, perception: dict) -> bool:
+        """发送感知更新"""
+        try:
+            await self.client.post(
+                f"/agents/{agent.id}/perception",
+                json=perception
+            )
+            return True
+        except:
+            return False
+    
+    async def close(self):
+        """关闭连接"""
+        await self.client.aclose()
+
+
 class ConnectorFactory:
     """连接器工厂"""
     
@@ -188,6 +306,11 @@ class ConnectorFactory:
             return OpenAIConnector(
                 api_key=config.get("api_key", ""),
                 model=config.get("model", "gpt-4o-mini")
+            )
+        elif connector_type == "agent_service":
+            return AgentServiceConnector(
+                base_url=config.get("base_url", "http://localhost:8001"),
+                api_key=config.get("api_key")
             )
         else:
             raise ValueError(f"Unknown connector type: {connector_type}")

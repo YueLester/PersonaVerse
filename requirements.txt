@@ -1,0 +1,28 @@
+# PersonaVerse Core Dependencies
+# Python 3.11+
+
+# Web Framework
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+python-socketio>=5.11.0
+
+# Data Validation
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# HTTP Client
+httpx>=0.26.0
+
+# Cache & Messaging
+redis>=5.0.0
+celery>=5.3.0
+
+# Task Queue (optional, for async tasks)
+# aiohttp>=3.9.0
+
+# Development Tools (optional)
+# pytest>=8.0.0
+# pytest-asyncio>=0.23.0
+# black>=24.0.0
+# ruff>=0.2.0
+# mypy>=1.8.0
