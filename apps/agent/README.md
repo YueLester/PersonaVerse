@@ -1,41 +1,39 @@
 # Agent Service
 
-AI 接入服务，支持 Ollama 本地大模型。
+基于多层架构的 AI 服务。
 
-## 快速开始
+## 架构
+
+```
+src/
+├── adapters/     # 算力接入层 - 统一接入AI模型
+├── core/         # 能力基础层 - LLM调用、Prompt管理
+├── services/     # 领域服务层 - 业务逻辑实现
+├── api/          # 接口层 - 对外暴露HTTP接口
+└── main.py       # 入口
+```
+
+每层文件夹内有 README 说明该层职责。
+
+## 快速启动
 
 ```bash
-# 1. 安装依赖
 pip install fastapi uvicorn httpx pydantic
-
-# 2. 确保 Ollama 运行并下载模型
-ollama pull qwen:2.5
-ollama serve
-
-# 3. 启动服务
-cd apps/agent/src
+cd src
 python main.py
-# 或
-uvicorn main:app --reload --port 8001
 ```
 
-## 使用
+## 接口
+
+| 接口 | 方法 | 描述 |
+|------|------|------|
+| `/v1/geo/province` | POST/GET | 根据城市查省份 |
+| `/v1/chat` | POST | 通用对话 |
+| `/v1/health` | GET | 健康检查 |
+
+## 示例
 
 ```bash
-# 对话生成
-curl -X POST http://localhost:8001/v1/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "messages": [{"role": "user", "content": "你好"}]
-  }'
-
-# 健康检查
-curl http://localhost:8001/v1/health
+curl -X POST http://localhost:8001/v1/geo/province \
+  -d '{"city": "杭州"}'
 ```
-
-## 环境变量
-
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `OLLAMA_URL` | `http://localhost:11434` | Ollama 地址 |
-| `DEFAULT_MODEL` | `qwen:2.5` | 默认模型 |
