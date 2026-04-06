@@ -4,9 +4,13 @@ Agent Service - 入口文件
 端口: 8001
 """
 
-from fastapi import FastAPI
+import sys
 import os
 
+# 将当前目录加入路径，支持直接运行 python main.py
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+from fastapi import FastAPI
 from api.routes import router
 
 app = FastAPI(
@@ -18,7 +22,7 @@ app = FastAPI(
 # 注册路由
 app.include_router(router, prefix="/v1")
 
-# 根路径重定向到文档
+
 @app.get("/")
 async def root():
     return {"message": "Agent Service", "docs": "/docs"}
