@@ -25,6 +25,24 @@ try:
         AGENT_SERVICE_API_KEY: str = ""
         AGENT_SERVICE_ENABLED: bool = False  # 是否启用 Agent 服务
         
+        # 远程 Agent 接入配置（WebSocket）
+        REMOTE_AGENT_ENABLED: bool = True
+        REMOTE_AGENT_WS_PATH: str = "/v1/agents/connect"
+        REMOTE_AGENT_HEARTBEAT_INTERVAL: float = 30.0
+        REMOTE_AGENT_HEARTBEAT_TIMEOUT: float = 60.0
+        REMOTE_AGENT_MAX_CONNECTIONS: int = 1000
+        REMOTE_AGENT_MAX_CONNECTIONS_PER_AGENT: int = 100
+        REMOTE_AGENT_OFFLINE_QUEUE_SIZE: int = 100
+        REMOTE_AGENT_OFFLINE_QUEUE_TTL: int = 3600
+        
+        # JWT 认证配置
+        REMOTE_AGENT_JWT_SECRET: str = "your-secret-key-change-in-production"
+        REMOTE_AGENT_JWT_TTL: int = 300  # 5分钟
+        
+        # 决策超时配置
+        REMOTE_AGENT_DECISION_TIMEOUT: float = 30.0
+        REMOTE_AGENT_DECISION_MAX_RETRIES: int = 2
+        
         class Config:
             env_file = ".env"
     
@@ -49,5 +67,23 @@ except ImportError:
         AGENT_SERVICE_URL: str = os.environ.get("AGENT_SERVICE_URL", "http://localhost:8001")
         AGENT_SERVICE_API_KEY: str = os.environ.get("AGENT_SERVICE_API_KEY", "")
         AGENT_SERVICE_ENABLED: bool = os.environ.get("AGENT_SERVICE_ENABLED", "false").lower() == "true"
+        
+        # 远程 Agent 接入配置（WebSocket）
+        REMOTE_AGENT_ENABLED: bool = os.environ.get("REMOTE_AGENT_ENABLED", "true").lower() == "true"
+        REMOTE_AGENT_WS_PATH: str = "/v1/agents/connect"
+        REMOTE_AGENT_HEARTBEAT_INTERVAL: float = 30.0
+        REMOTE_AGENT_HEARTBEAT_TIMEOUT: float = 60.0
+        REMOTE_AGENT_MAX_CONNECTIONS: int = 1000
+        REMOTE_AGENT_MAX_CONNECTIONS_PER_AGENT: int = 100
+        REMOTE_AGENT_OFFLINE_QUEUE_SIZE: int = 100
+        REMOTE_AGENT_OFFLINE_QUEUE_TTL: int = 3600
+        
+        # JWT 认证配置
+        REMOTE_AGENT_JWT_SECRET: str = os.environ.get("REMOTE_AGENT_JWT_SECRET", "your-secret-key-change-in-production")
+        REMOTE_AGENT_JWT_TTL: int = 300  # 5分钟
+        
+        # 决策超时配置
+        REMOTE_AGENT_DECISION_TIMEOUT: float = 30.0
+        REMOTE_AGENT_DECISION_MAX_RETRIES: int = 2
     
     settings = Settings()
